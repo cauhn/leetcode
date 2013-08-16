@@ -8,6 +8,7 @@
 #include <math.h>
 #include <string>
 #include <set>
+#include <bitset>
 
 using namespace std;
 
@@ -20,6 +21,202 @@ struct ListNode {
 
 class Solution {
 public:
+	//数独是否有效
+	//空位为‘.’
+	bool isValidSudoku(vector<vector<char> > &board) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+		const int n = 9;
+        //row identify
+		for(size_t i=0; i!= board.size(); i++)
+		{
+			vector<char>	str = board[i];
+			bitset<n>	bflag(0);
+			for(size_t j=0; j!= str.size(); j++)
+			{
+				if(str[j]=='.')	continue;
+				size_t ind = str[j]-'0';
+				if(bflag.test(ind))	return false;
+				else bflag.set(ind);
+			}
+
+		}
+    }
+
+	//查找target可以插入的位置
+	int searchInsert(int A[], int n, int target) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        if(target < A[0])	return 0;
+		if(target > A[n-1])	return n;
+		return searchInsert(A,0,n-1,target);
+    }
+
+	int searchInsert(int a[], int l, int r, int target)
+	{
+		if(l>r)
+		{
+			return l;
+		}
+
+		int m = (l+r)/2;
+		if(target == a[m])		return m;
+		else if(target < a[m])	return searchInsert(a,l,m-1,target);
+		else return searchInsert(a,m+1,r,target);
+	}
+
+
+	//在排序数组中找到和target一样的值得位置
+	vector<int> searchRange(int A[], int n, int target) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        vector<int>	res;
+		searchRange(A,0,n-1,target,res);
+		if(res.empty())	
+		{
+			res.push_back(-1);
+			res.push_back(-1);
+			return res;
+		}
+		else
+		{
+			int lloc,rloc;
+			lloc = n-1, rloc=0;
+			for(size_t i=0; i!=res.size(); i++)
+			{
+				if(res[i]<lloc)
+				{
+					lloc = res[i];
+				}
+				if(res[i]>rloc)
+					rloc = res[i];
+			}
+			vector<int> result;
+			result.push_back(lloc);
+			result.push_back(rloc);
+			return result;
+		}
+    }
+
+	void searchRange(int a[], int l, int r, int target, vector<int>& res)
+	{
+		if(l>r)	return ;
+		int m = (l+r)/2;
+		
+		if(a[m]>target)
+			 searchRange(a,l,m-1,target,res);
+		else if(a[m]<target)
+			 searchRange(a,m+1,r,target,res);
+		else	//target 找到
+		{
+			res.push_back(m);
+			searchRange(a,l,m-1,target,res);
+			searchRange(a,m+1,r,target,res);
+		}
+
+	
+	}
+	//数组是一个递增数组，但是右移了几位，求搜索target的位置
+	int search(int A[], int n, int target) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        search(A,0,n-1,target);
+    }
+
+	int search(int A[], int l, int r, int target)
+	{
+		if(l>r)
+			return -1;
+		int m = (l+r)/2;
+		if(A[m]==target)
+			return m;
+		
+		if(A[l]<A[m])
+		{
+			if(A[l]<=target && target < A[m])
+				return search(A,l,m-1,target);
+			else
+				return search(A,m+1,r,target);
+		}
+		else if(A[l]==A[m])
+		{
+			int res = search(A,l+1,m-1,target);
+			if(res!=-1)	return res;
+			else return search(A,m+1,r,target);
+		}
+		else if(A[l]>A[m])
+		{
+			if(target >A[m] && target<= A[r])
+				return search(A,m+1,r,target);
+			else
+				return search(A,l,m-1,target);
+		}
+
+		return -1;
+	
+	}
+
+	//求字典中的下一个数 
+	void nextPermutation(vector<int> &num) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        //从末尾开始找到第一个 前一个值< 后一个值
+		size_t sz = num.size();
+		size_t px=0;
+		for(size_t i = sz-1; i>0; i--)
+		{
+			if( num[i]<= num[i-1])
+				continue;
+			else
+			{
+				px = i-1;
+				break;
+			}
+		}
+		//若是递减序列，则下一个为最小数组
+		if(px==0)
+		{
+			int j=0;
+			int k = sz-1;
+			while(j<k)
+			{
+				num[j] ^=num[k];
+				num[k]	^=num[j];
+				num[j]	^=num[k];
+				j++;
+				k--;
+			}
+			return;
+		}
+		size_t ch=0;
+		for(size_t i= sz-1; i>px; i--)
+		{
+			if(num[i]>num[px])
+			{
+				ch = i;
+				break;
+			}		
+		}
+
+		int tmp = num[ch];
+		num[ch] = num[px];
+		num[px] = tmp;
+
+		int j = px+1;
+		int k = sz-1;
+		while(j<k)
+		{
+			int temp = num[j];
+			num[j] = num[k];
+			num[k] = temp;
+			j++;
+			k--;
+		}
+
+
+    }
+
+
 	//查找级联容器中的字符串在S中的位置
 	vector<int> findSubstring(string S, vector<string> &L) {
      // Start typing your C/C++ solution below
@@ -44,7 +241,6 @@ public:
 				ind = ind+sz;
 			}
 
-			int 
 			while(!tmpset.empty())
 			{
 				
