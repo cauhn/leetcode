@@ -9,6 +9,8 @@
 #include <string>
 #include <set>
 #include <bitset>
+#include <algorithm>
+#include <numeric>
 
 using namespace std;
 
@@ -21,27 +23,563 @@ struct ListNode {
 
 class Solution {
 public:
+	//两个很大的数相乘
+	string multiply(string num1, string num2) {
+		// Start typing your C/C++ solution below
+		// DO NOT write int main() function
+		int sz1 = num1.size();
+		int sz2 = num2.size();
+		int sz = min(sz1,sz2);
+		string small, large;
+		small = sz==sz1?num1:num2;
+		large = sz==sz1?num2:num1;
+		string res;
+		for (int i=0; i<sz; i++)
+		{
+			int digit = small[i]-'0';
+			string str = multiply(large,digit);
+			res.push_back('0');
+			res = plus(res,str);
+		}
+		return res;
+	}
+
+	string multiply(string num1, int digit)
+	{
+		if (digit==0)
+		{
+			return "";
+		}
+		if (digit == 1)
+		{
+			return num1;
+		}
+		size_t sz = num1.size();
+		string str(sz,'0');
+		int add = 0;
+		for (int i=num1.size()-1; i>=0; i--)
+		{
+			int mul = num1[i]-'0';
+			int res = mul*digit+add;
+			add = res/10;
+			str[i] = res%10+'0';
+		}
+		if (add>0)
+		{
+			char c[10];
+			memset(c,0,10*sizeof(char));
+			sprintf(c,"%d",add);
+			str = c+str;
+		}
+		return str;
+	}
+
+	string plus(string num1,string num2)
+	{
+		int sz1 = num1.size();
+		int sz2 = num2.size();
+		string small, large,small2,left;
+		if (sz1<sz2)
+		{
+			small = num1;
+			large = num2;
+			small2 = large.substr(sz2-sz1);
+			left = large.substr(0,sz2-sz1);
+		}
+		else
+		{
+			small = num2;
+			large = num1;
+			small2 = large.substr(sz1-sz2);
+			left = large.substr(0,sz1-sz2);
+		}
+		string str1(small),str2(left);
+		int sz = small.size();
+		int n1,n2,sum,add=0;
+		for (int i=sz-1; i>=0; i--)
+		{
+			n1 = small[i]-'0';
+			n2 = small2[i]-'0';
+			sum = n1+n2+add;
+			str1[i] = sum%10 + '0';
+			add = sum/10;
+		}
+		if (add==0)
+		{
+			return str2+str1;
+		}
+		
+		int size = left.size();
+		for (int i= size-1; i>=0; i--)
+		{
+			n1 = left[i]-'0';
+			sum = n1+add;
+			str2[i] = sum%10+'0';
+			add =sum/10;
+			if (add==0)
+			{
+				break;
+			}
+		}
+		if (add==0)
+		{
+			return str2+str1;
+		}
+
+		char c[10];
+		sprintf(c,"%d",add);
+		string str = c+str2+str1;
+		return str;
+		
+	}
+
+	//计算坐标系中的空间，放水的空间大小
+	int trap(int A[], int n) {
+		// Start typing your C/C++ solution below
+		// DO NOT write int main() function
+		
+		int left,right;
+		left = 0;
+		while (A[left]==0)
+		{
+			left++;
+		}
+
+		int area = 0;
+
+		while(left<n-1)
+		{
+			int i = left+1;
+			right = i;
+			//往右查找 大于或等于left的值
+			while (i<n && A[i]<A[left])
+			{
+				i++;
+			}
+			if (i==n)
+			{
+			//往右查找 查找第二大的值
+				int j = left+1;
+				
+				int high = 0;
+				while(j<n )
+				{
+					if (A[j]>=high)
+					{
+						right = j;
+						high = A[j];
+					}
+					j++;
+				}				
+			}
+			else
+			{
+				right = i;
+			}
+			int sum = accumulate(A+left+1,A+right,0);
+			area += min(A[left],A[right])*(right-left-1) - sum;
+			left = right;
+
+		}
+
+		return area;
+
+
+	}
+	//复杂度o（n） 空间o(1)
+	int firstMissingPositive(int A[], int n) {
+		// Start typing your C/C++ solution below
+		// DO NOT write int main() function
+		for (int i=0; i!=n; i++)
+		{
+			if (A[i]<=0)
+			{
+				A[i] = n+2;
+			}
+		}
+
+		for (int i=0; i!=n; i++)
+		{
+			int num = abs(A[i]);
+			if (num>0 && num<=n)
+			{
+				if (A[num-1]>0)
+					A[num-1] = -A[num-1];
+			}	
+		}
+		int cnt = -1;
+		for (int i=0; i!=n; i++)
+		{
+			if (A[i]>0)
+			{
+				cnt = i+1;
+				break;
+			}
+			
+		}
+		if (cnt==-1)
+		{
+			cnt = n+1;
+		}
+		return cnt;
+	}
+	//只能有一个数出现
+	vector<vector<int> > combinationSum2(vector<int> &num, int target) {
+		// Start typing your C/C++ solution below
+		// DO NOT write int main() function
+		sort(num.begin(),num.end());
+		vector<vector<int> >result;
+		vector<int> input;
+		if (num.empty())
+		{
+			return result;
+		}
+		if (num[0]>target)
+		{
+			return result;
+		}
+		combinationSum2(input,num,target,result);
+		return result;
+	}
+
+	void combinationSum2(vector<int>& input, vector<int>& candidates, int target, vector<vector<int> >&res)
+	{
+		for (int i=0; i< candidates.size(); i++)
+		{
+			if (i>0 && candidates[i]==candidates[i-1])
+			{
+				continue;
+			}
+			
+			int num = candidates[i];
+			if (target==num)
+			{
+				input.push_back(num);
+				res.push_back(input);
+				input.pop_back();
+				return;
+			}
+			else if (target > num)
+			{
+				input.push_back(num);
+				vector<int> tmp(candidates.begin()+i+1,candidates.end());
+				combinationSum2(input,tmp,target-num,res);
+				input.pop_back();
+			}
+			else
+				return;
+		}
+		
+		
+	}
+	//用数组中的数进行复制组合成target
+	vector<vector<int> > combinationSum(vector<int> &candidates, int target) {
+		// Start typing your C/C++ solution below
+		// DO NOT write int main() function
+		
+		vector<vector<int>  > result;
+		if (candidates.empty())
+		{
+			return result;
+		}
+		sort(candidates.begin(),candidates.end());
+		vector<int> input;
+		combinationSum(input,candidates,target,result);
+		return result;
+
+	}
+
+	void combinationSum(vector<int>& input, vector<int>& candidates, int target,vector<vector<int>  >&res)
+	{
+
+		for (int i=0; i<candidates.size(); i++)
+		{
+			input.push_back(candidates[i]);
+			int sum = 0;
+			sum =accumulate(input.begin(), input.end(),0);
+			if (sum==target)
+			{
+				res.push_back(input);
+				input.pop_back();
+				continue;
+			}
+			else if(sum>target)
+			{
+				input.pop_back();
+				return;
+			}
+			else
+			{
+				vector<int>	origin(candidates.begin()+i,candidates.end());
+				combinationSum(input,origin,target,res);
+				input.pop_back();
+			}
+			
+			
+		}
+		
+
+	}
+
+
+	//数数
+	//1, 11, 21, 1211, 111221, ...
+	string countAndSay(int n) {
+		// Start typing your C/C++ solution below
+		// DO NOT write int main() function
+		if (n==1)
+		{
+			return "1";
+		}
+		string str = countAndSay(n-1);
+		string res="";
+		size_t i=0;
+		char num[100];
+		while (i<str.size())
+		{
+			
+			int j=i+1;
+			while (j<str.size() && str[i]==str[j])
+			{
+				j++;
+			}
+			int cnt = j-i;
+			memset(num,0,100*sizeof(char));
+			res = res+itoa(cnt,num,10);
+			res.push_back(str[i]);
+			i = j;
+		}
+		return res;
+	}
+
+	
+	
+	//解决数独问题
+	void solveSudoku(vector<vector<char> > &board) {
+		// Start typing your C/C++ solution below
+		// DO NOT write int main() function
+		//buid usable array
+		set<int> defset;
+		for (int i=1; i!=10; i++)
+		{
+			defset.insert(i);
+		}
+		const int n= 9;
+		int sz = board.size();
+		if (sz!=n)
+		{
+			return;
+		}
+
+		vector<set<int> >rowusable(n,defset),colusable(n,defset),ceilusable(n,defset);	//每一列，每一行，每一个小格可以使用的数字
+		vector<int>	numrow(n,n),numcol(n,n),numceil(n,n);	//每一行，每一列，每个小格有多少不确定数
+		int certain[n][n];	//不确定数的选择
+		set<int>	unvisit;	//没有确定的位置
+		memset(certain,0,sizeof(char)*n*n);	
+		for (int i=0; i!=board.size(); i++)
+		{
+			int row = i/3;
+			vector<char> str = board[i];
+			for (int j=0; j!=str.size(); j++)
+			{
+				int col = j/3;
+				if (str[j]=='.')
+				{
+					certain[i][j]=10;
+					int ind = i*10+j;
+					unvisit.insert(ind);
+					continue;
+				}
+				int ind = str[j]-'0';
+				certain[i][j]=ind;
+				rowusable[i].erase(ind);	
+				colusable[j].erase(ind);
+				int ceilind = row*3+col;
+				ceilusable[ceilind].erase(ind);
+				numrow[i]--;
+				numcol[j]--;
+				numceil[ceilind]--;
+			}
+		}
+
+		suduVisit(board,unvisit,rowusable,colusable,ceilusable);
+		
+
+
+	}
+
+	bool suduVisit(vector<vector<char> > &board, set<int>& unvisit, vector<set<int> >& rowuse, vector<set<int> >& coluse, vector<set<int> >&ceiluse)
+	{
+		if (unvisit.empty())
+		{
+			return true;
+		}
+		
+		int ind = *unvisit.begin();
+		unvisit.erase(ind);
+
+		int m,n,c;
+		m = ind/10;
+		n = ind%10;
+		c = m/3*3+n/3;
+		set<int> tmp,use;
+		set_intersection(rowuse[m].begin(),rowuse[m].end(),coluse[n].begin(),coluse[n].end(),inserter(tmp,tmp.begin()));
+		set_intersection(tmp.begin(),tmp.end(),ceiluse[c].begin(),ceiluse[c].end(),inserter(use,use.begin()));
+	
+		if (use.empty())
+		{
+			unvisit.insert(ind);
+			return false;
+		}
+		
+		set<int>::iterator iter = use.begin();
+		
+		
+		while (iter!=use.end())
+		{
+			int num = *iter;
+			bool flagrow,flagcol,flagceil;
+			flagrow = flagcol = flagceil = false;
+			if (rowuse[m].count(num))
+			{
+				flagrow = true;
+			}
+			if (coluse[n].count(num))
+			{
+				flagcol = true;
+			}
+			if (ceiluse[c].count(num))
+			{
+				flagceil = true;
+			}
+						
+			
+			rowuse[m].erase(num);
+			coluse[n].erase(num);
+			ceiluse[c].erase(num);
+			board[m][n]=num+'0';
+
+				//如果下一个所有尝试都失败
+				if(!suduVisit(board,unvisit,rowuse,coluse,ceiluse))
+				{
+					board[m][n] = '.';
+					if (flagrow)
+					{
+						rowuse[m].insert(num);
+					}
+					if (flagcol)
+					{
+						coluse[n].insert(num);
+					}
+					if (flagceil)
+					{
+						ceiluse[c].insert(num);
+					}		
+					iter++;
+				}
+				else
+					return true;	
+		}
+		//如果所有都没有正确的话
+		unvisit.insert(ind);
+		return false;
+
+	}
+
+	
+
+
+
 	//数独是否有效
 	//空位为‘.’
 	bool isValidSudoku(vector<vector<char> > &board) {
         // Start typing your C/C++ solution below
         // DO NOT write int main() function
-		const int n = 9;
+		const int n = 10;
         //row identify
 		for(size_t i=0; i!= board.size(); i++)
 		{
 			vector<char>	str = board[i];
-			bitset<n>	bflag(0);
-			for(size_t j=0; j!= str.size(); j++)
+			if (!isValidSudoku(str))
 			{
-				if(str[j]=='.')	continue;
-				size_t ind = str[j]-'0';
-				if(bflag.test(ind))	return false;
-				else bflag.set(ind);
+				return false;
 			}
-
 		}
+		//cols identify
+		for (size_t i=0; i!=board[0].size(); i++)
+		{
+			vector<char> str;
+			for (size_t j=0; j!=board.size();j++)
+			{
+				str.push_back(board[j][i]);
+			}
+			if (!isValidSudoku(str))
+			{
+				return false;
+			}
+		}
+
+		//little cube
+		for(size_t i=0; i<n/3; i++)
+		{
+			vector<char> str0,str1,str2;
+			str0 = board[3*i+0];
+			str1 = board[3*i+1];
+			str2 = board[3*i+2];
+			for (size_t j=0; j<n/3; j++)
+			{
+				vector<char> str;
+				str.push_back(str0[3*j+0]);
+				str.push_back(str0[3*j+1]);
+				str.push_back(str0[3*j+2]);
+				str.push_back(str1[3*j+0]);
+				str.push_back(str1[3*j+1]);
+				str.push_back(str1[3*j+2]);
+				str.push_back(str2[3*j+0]);
+				str.push_back(str2[3*j+1]);
+				str.push_back(str2[3*j+2]);
+				if (!isValidSudoku(str))
+				{
+					return false;
+				}			
+			}		
+		}
+
+		return true;
+		
+		
+
     }
+
+	bool isValidSudoku(vector<char> &board)
+	{
+		size_t sz = board.size();
+		const int n = 10;
+		if (sz!=n-1)
+		{
+			return false;
+		}
+		char	flag[n]={0};
+		for (size_t i=0; i!=sz; i++)
+		{
+			char c = board[i];
+			if (c=='.')
+			{
+				continue;
+			}
+			int ind = c-'0';
+			if (flag[ind])
+			{
+				return false;
+			}
+			else
+			{
+				flag[ind]=1;
+			}
+			
+		}
+		return true;
+	}
 
 	//查找target可以插入的位置
 	int searchInsert(int A[], int n, int target) {
@@ -558,19 +1096,16 @@ public:
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-
-	Solution s;
-	int i = (int)2147483648*-1;
-	int c;
-	if(i>=0L)
+	/*string str[9] = {"..9748...","7........",".2.1.9...","..7...24.",".64.1.59.",".98...3..","...8.3.2.","........6","...2759.."};
+	vector<vector<char> > input;
+	for (int i=0; i!=9; i++)
 	{
-		printf("hello\n");
+		vector<char> vec(str[i].begin(),str[i].end());
+		input.push_back(vec);
 	}
-	else
-		 c = -i;
-	int d = i>=0L ? i : -i;
-	//int d = abs(i);
-	s.divide(i,2);
+	*/
+	Solution s;
+	string str = s.multiply("123","38");
 	return 0;
 }
 
