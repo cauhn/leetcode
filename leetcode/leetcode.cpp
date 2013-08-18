@@ -23,6 +23,213 @@ struct ListNode {
 
 class Solution {
 public:
+	
+	// Given an array of non-negative integers, you are initially positioned at the first index of the array.
+	//Each element in the array represents your maximum jump length at that position.
+	//	Your goal is to reach the last index in the minimum number of jumps.
+	//	For example:
+	//Given array A = [2,3,1,1,4]
+	//The minimum number of jumps to reach the last index is 2. (Jump 1 step from index 0 to 1, then 3 steps to the last index.)
+	int jump(int A[], int n) {
+		// Start typing your C/C++ solution below
+		// DO NOT write int main() function
+		return jump(A,0,n-1);
+	}
+
+	int jump(int a[], int beg, int end)
+	{
+		if (beg==end)
+		{
+			return 0;
+		}
+		if (a[beg]==0)
+		{
+			return INT_MAX;
+		}
+		if (beg+a[beg]>=end)
+		{
+			return 1;
+		}
+		
+		int val = INT_MAX;
+		for (int i = 1; i<=a[beg]; i++)
+		{
+			int cnt = jump(a,beg+i,end);
+			if (cnt<val)
+			{
+				val = cnt;
+			}
+		}
+		return val+1;
+	}
+
+	//通配符匹配
+	// *--任意字符串  ？--单个字符
+
+	vector<string> getpattens(const char* p)
+	{
+		vector<string >	patten;
+		string s;
+		while (true)
+		{
+			if (*p=='*' || *p=='\0')
+			{
+				if (!s.empty())
+				{
+					patten.push_back(s);
+					s = "";
+				}
+				if (*p=='\0')
+				{
+					break;
+				}
+			}
+			else
+			{
+				s.push_back(*p);
+			}
+			p++;
+		}
+		return patten;
+	}
+
+	int matchstr(const char*s,const string& pat, int beg, int limit)
+	{
+		for (; beg<=limit; beg++)
+		{
+			for (int j=0; j<pat.size(); j++)
+			{
+				if (pat[j]!='?' && pat[j]!=s[beg+j])
+				{
+					break;
+				}
+				//全部匹配成功
+				if (j == pat.size()-1)
+				{
+					return beg;
+				}
+			}
+		}
+		return -1;
+	
+	}
+	bool isMatch(const char *s, const char *p) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+		
+		//利用贪心算法
+		if (s==NULL || p==NULL)
+		{
+			return false;
+		}
+		vector<string> patterns = getpattens(p);
+		if (patterns.empty())
+		{
+			if (*p=='*')
+			{
+				return true;
+			}
+			else
+				return *s=='\0';
+		}
+
+		// match each patten one by one on s
+		int slen = strlen(s);
+		int plen = strlen(p);
+
+		int sb = 0;
+		bool restrictfront = *p!='*';
+		bool restricttail = *(p+plen-1)!='*';
+		for (int pi = 0; pi<patterns.size(); pi++)
+		{
+			string str = patterns[pi];
+			int sblimit = slen - str.size();
+			if (sblimit < sb)
+			{
+				return false;
+			}
+
+			if (pi==0 && restrictfront)
+			{
+				sblimit = 0;
+			}
+			else if (pi == patterns.size()-1 && restricttail)
+			{
+				sb = slen-str.size();
+				sblimit = sb;
+			}
+
+			int matchbase = matchstr(s,str,sb,sblimit);
+			if (-1 == matchbase)
+			{
+				return false;
+			}
+			else
+			{
+				sb = matchbase+str.size();
+			}
+		}
+
+		if (patterns.size()==1)
+		{
+			if (restrictfront && restricttail)
+			{
+				return s[sb]=='\0';
+			}
+		}
+		return true;
+
+		//无法过大数据
+		//if (*s=='\0' && *p=='\0')
+		//{
+		//	return true;
+		//}
+
+		////如果不是通配符
+		//if (*p!='*')
+		//{
+		//	if (*p=='?')
+		//	{
+		//		return *s=='\0' ? false : isMatch(s+1,p+1);
+		//	}
+		//	else
+		//	{
+		//		if (*p=='\0' && *s !='\0')
+		//		{
+		//			return false;
+		//		}
+		//		return *p==*s ? isMatch(s+1,p+1) : false;
+		//	}
+		//}
+
+		//// 通配符
+		//int num = 0;
+		//while (1)
+		//{
+		//	//找到下一个不为‘*’的位置
+		//	p = p+1;
+		//	while (*(p)=='*')
+		//	{
+		//		p = p+1;
+		//	}
+		//	if (isMatch(s+num, p))
+		//	{
+		//		return true;
+		//	}
+		//	if (*(s+num)=='\0')
+		//	{
+		//		break;
+		//	}
+		//	num++;
+		//}
+		//return  false;
+
+
+    }
+
+	
+
+
 	//两个很大的数相乘
 	string multiply(string num1, string num2) {
 		// Start typing your C/C++ solution below
@@ -1105,7 +1312,9 @@ int _tmain(int argc, _TCHAR* argv[])
 	}
 	*/
 	Solution s;
-	string str = s.multiply("123","38");
+	char* ss = "ab";
+	char* p = "?*";
+	bool flag = s.isMatch(ss,p);
 	return 0;
 }
 
